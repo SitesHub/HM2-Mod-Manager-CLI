@@ -1,6 +1,6 @@
-# HM2 Mod Manager CLI
+# Hotline Miami 2 Mod Manager CLI
 
-This is a Mod Manager designed to install, uninstall mods for Hotline miami 2 without the hastle of going back and fourth with folders
+This is a Mod Manager designed to install, uninstall mods for Hotline miami 2 without the hastle of going back and forth with folders
 
 ## How it works
 
