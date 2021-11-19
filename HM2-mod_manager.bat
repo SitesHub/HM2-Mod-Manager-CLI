@@ -1,5 +1,4 @@
 @echo off
-setlocal EnableDelayedExpansion
 
 if "%1" == "" goto :help
 if "%1" == "/?" goto :help
@@ -30,21 +29,8 @@ exit /b
 
 :reset
 
-    if not exist %appdata%\HM2-Mod_Manager\path_to_game_folder.dat (
-
-        echo The path to the game's folder is missing
-        echo You need to create it first
-        goto :end_reset
-
-    )
-
-    if not exist %appdata%\HM2-Mod_Manager\path_to_backup.dat (
-
-        echo The path to the backup is missing
-        echo You need to create it first
-        goto :end_reset
-
-    )
+    call :checks
+    if "%quit%" == "yes" exit /b 1
 
     @REM Gets the paths and then it goes to the mods folder, resetting it
     @REM Same with the music
@@ -61,7 +47,6 @@ exit /b
     cd /d %pathToBackup%
     copy /y hlm2_music_desktop.wad %pathToFolder% > nul
 
-:end_reset
 exit /b
 
 :set_path
@@ -129,21 +114,8 @@ exit /b
 
 :settings
 
-    if not exist %appdata%\HM2-Mod_Manager\path_to_game_folder.dat (
-
-        echo The path to the game's folder is missing
-        echo You need to create it first
-        goto :end_reset
-
-    )
-
-    if not exist %appdata%\HM2-Mod_Manager\path_to_backup.dat (
-
-        echo The path to the backup is missing
-        echo You need to create it first
-        goto :end_reset
-
-    )
+    call :checks
+    if "%quit%" == "yes" exit /b 1
 
     @REM Explorer mode
     if "%2" == "/e" (
@@ -167,13 +139,8 @@ exit /b
 
 :install
 
-    if not exist %appdata%\HM2-Mod_Manager\path_to_game_folder.dat (
-
-        echo The path to the game's folder is missing
-        echo You need to create it first
-        goto :end_install
-
-    )
+    call :checks
+    if "%quit%" == "yes" exit /b 1
 
     @REM Gets the amount of files needed to be installed 
     @REM present in the same folder as the batch file and
@@ -188,26 +155,12 @@ exit /b
     if "%patchwad%" neq "0" move *.patchwad "%userprofile%\Documents\My Games\HotlineMiami2\mods" > nul
     if "%wad%" neq "0" move *.wad %pathToFolder% > nul
 
-:end_install
 exit /b
 
 :uninstall
 
-    if not exist %appdata%\HM2-Mod_Manager\path_to_game_folder.dat (
-
-        echo The path to the game's folder is missing
-        echo You need to create it first
-        goto :end_uninstall
-
-    )
-
-    if not exist %appdata%\HM2-Mod_Manager\path_to_backup.dat (
-
-        echo The path to the backup is missing
-        echo You need to create it first
-        goto :end_uninstall
-
-    )
+    call :checks
+    if "%quit%" == "yes" exit /b 1
 
     set originalPath=%cd%
 
@@ -234,5 +187,40 @@ exit /b
     cd /d %pathToBackup%
     copy /y hlm2_music_desktop.wad %pathToFolder% > nul
 
-:end_uninstall
+exit /b
+
+
+:checks
+
+    if not exist %appdata%\HM2-Mod_Manager\path_to_game_folder.dat (
+
+        if not exist %appdata%\HM2-Mod_Manager\path_to_backup.dat (
+
+            echo The paths are missing
+            echo You need to create them first
+            goto :end
+
+        )
+
+    )
+
+    if not exist %appdata%\HM2-Mod_Manager\path_to_game_folder.dat (
+
+        echo The path to the game's folder is missing
+        echo You need to create it first
+        goto :end
+
+    )
+
+    if not exist %appdata%\HM2-Mod_Manager\path_to_backup.dat (
+
+        echo The path to the backup is missing
+        echo You need to create it first
+        goto :end
+
+    )
+
+exit /b
+:end
+set quit=yes
 exit /b
