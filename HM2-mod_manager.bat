@@ -172,7 +172,7 @@ exit /b
 
         for /L %%A in (0, 1, !amount!) do (
 
-            move !list[%%A]! "%userprofile%\Documents\My Games\HotlineMiami2\mods" > nul
+            move !list[%%A]! "%userprofile%\Documents\My Games\HotlineMiami2\mods" > nul 2> nul
 
         )
 
