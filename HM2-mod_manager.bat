@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 
 if "%1" == "" goto :help
 if "%1" == "/?" goto :help
@@ -145,9 +146,41 @@ exit /b
     @REM Gets the amount of files needed to be installed 
     @REM present in the same folder as the batch file and
     @REM the path to the game's folder
+
+    @REM If there are patchwad files inside other folders that are in the current one,
+    @REM it'll get the main folder, closest to the current one and place it inside the mods' folder
+    set count=0
+    set existPatchwadsInsideFolders=false
+    for /R %%A in (*.patchwad) do (
+
+        if %existPatchwadsInsideFolders% == false set existPatchwadsInsideFolders=true
+
+        set normalPath=%%A
+	    call set onlyFolder_Name=%%normalPath:!cd!\=%%
+	    for /f "delims=\" %%B in ('echo !onlyFolder_Name!') do set finalPath=%%B
+
+        set list[!count!]=!finalPath!
+        set /A count=%count%+1 > nul
+
+    )
+
+
+    @REM Moves folders inside mods if found any
+    if %existPatchwadsInsideFolders% == true (
+
+        set /A amount=%count%-1
+
+        for /L %%A in (0, 1, !amount!) do (
+
+            move !list[%%A]! "%userprofile%\Documents\My Games\HotlineMiami2\mods" > nul
+
+        )
+
+    )
+    set /p pathToFolder=<%appdata%\HM2-Mod_Manager\path_to_game_folder.dat
+
     for /F "delims=" %%A in ('dir ^| find /c ".patchwad"') do set patchwad=%%A
     for /F "delims=" %%A in ('dir ^| find /c ".wad"') do set wad=%%A
-    set /p pathToFolder=<%appdata%\HM2-Mod_Manager\path_to_game_folder.dat
 
 
     @REM Install the files inside the correct folders
