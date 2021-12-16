@@ -22,6 +22,13 @@ To set them, just use the following parameters:
 ```
 /i            Install all mods that are in the same folder
 
+                 [path_to_zip] 
+                    Extracts the zip file inside %TEMP% and installs its contents
+
+                 [URL]
+                    Downloads the zip file from DropBox and installs it
+                    
+
 /un           Uninstalls all mods that are in the same folder
 
 /r            Resets everything back to normal
