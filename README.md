@@ -22,11 +22,12 @@ To set them, just use the following parameters:
 ```
 /i            Install all mods that are in the same folder
 
-                 [path_to_zip] 
+                 /x [path\to\compressed-file] 
                     Extracts the zip file inside %TEMP% and installs its contents
 
                  [URL]
-                    Downloads the zip file from DropBox and installs it
+                    Downloads the file from an url and installs it
+                    NOTE: if it's not from DropBox, it'll ask for user's confirmation
                     
 
 /un           Uninstalls all mods that are in the same folder
@@ -34,8 +35,8 @@ To set them, just use the following parameters:
 /r            Resets everything back to normal
 
 /s            Sets the path of the game's folder
-              add /b after the first paramater to create the backup's path
+                 /b Creates the backup's path
      
 /settings     Shows all paths
-              add /e to open up the settings' folder via Explorer
+                 /e Opens up the settings' folder via Explorer
 ```
