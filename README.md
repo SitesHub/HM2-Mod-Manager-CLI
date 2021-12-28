@@ -22,6 +22,8 @@ To set them, just use the following parameters:
 -s -b     for the second
 ```
 
+Or you can set them via the menu by choosing an option first and then pasting in the path
+
 ## Paramaters available:
 ```
 -i            Install all mods that are in the same folder
