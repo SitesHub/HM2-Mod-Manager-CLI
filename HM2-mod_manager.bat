@@ -33,6 +33,10 @@ if %version% lss 10 (
 
 )
 
+@REM CHANGED: Added 2 new variables;
+set "pwshScriptPath_Batch=\HM2-Mod_Manager\scripts.ps1"
+set "pwshScriptPath_PWSH=. $env:appdata%pwshScriptPath_Batch%;"
+
 
 @REM Double clicked
 echo %cmdcmdline% | find /i """%~f0""" >nul && goto :help_click
@@ -49,6 +53,8 @@ goto :help
 
 :help
 
+    @REM CHANGED: Added the text of the WBF inside help
+
     echo %BOLD%Manager of mods for HM2%NORMAL% 
     echo.
     echo    %BOLD%/i%NORMAL%           Installs the mods
@@ -64,8 +70,12 @@ goto :help
     echo.
     echo    %BOLD%/r%NORMAL%           Resets everything back to normal
     echo.
-    echo    %BOLD%/s%NORMAL%           Sets the path of the game's folder
-    echo                    %BOLD%/b%NORMAL% Creates the backup's path
+    echo    %BOLD%/s%NORMAL%           Sets the path of the %BOLD%game's folder%NORMAL%
+    echo.
+    echo                    %BOLD%/b%NORMAL% Creates the %BOLD%backup's path%NORMAL%
+    echo.
+    echo                    %BOLD%/bf%NORMAL% Creates the %BOLD%game's folder%NORMAL% using the %BOLD%Windows Browser For Folders%NORMAL%
+    echo                       %BOLD%/b%NORMAL% Creates the %BOLD%backup's path%NORMAL% using the %BOLD%Windows Browser For Folders%NORMAL%
     echo.
     echo    %BOLD%/settings%NORMAL%    Shows all paths
     echo                    %BOLD%/e%NORMAL% Opens up the settings' folder via Explorer
@@ -170,13 +180,10 @@ exit /b
     @REM Creates the path file inside its folder named "HM2-Mod_Manager"
     cd /d %appdata%
 
+    @REM CHANGED: Changed path variable name to _path
+
     @REM Backup mode
     if "%2" == "/b" (
-
-        set path=%3
-
-        set noQuotes=%path:"=%
-        set pathWithFolderName=%noQuotes%
 
         if "%3" == "" (
 
@@ -185,6 +192,12 @@ exit /b
             exit /b
 
         )
+
+        set _path=%3
+
+        set noQuotes=%_path:"=%
+        set pathWithFolderName=%noQuotes%
+
 
         if exist HM2-Mod_Manager (
 
@@ -205,6 +218,60 @@ exit /b
 
     )
 
+    @REM Windows Browser For Folders
+    @REM CHANGED: Added a new option to set the paths
+    if "%2" == "/bf" (
+
+        if "%3" == "/b" (
+
+            for /F "delims=" %%A in ('powershell -Command "& {%pwshScriptPath_PWSH% getPathFromWindowsFolderBrowser}"') do set _path=%%A
+
+            set noQuotes=!_path:"=!
+            set pathWithFolderName=!noQuotes!
+
+            if exist HM2-Mod_Manager (
+
+                cd HM2-Mod_Manager
+                echo !pathWithFolderName! > path_to_backup.dat
+                echo Set the path to the Backup's folder
+                goto :end_set_path
+
+            ) else (
+
+                mkdir HM2-Mod_Manager
+                cd HM2-Mod_Manager
+                echo !pathWithFolderName! > path_to_backup.dat
+                echo Set the path to the Backup's folder
+                goto :end_set_path
+
+            )
+
+        )
+
+        for /F "delims=" %%A in ('powershell -Command "& {%pwshScriptPath_PWSH% getPathFromWindowsFolderBrowser}"') do set _path=%%A
+
+        set noQuotes=!_path:"=!
+        set pathWithFolderName=!noQuotes!
+
+        if exist HM2-Mod_Manager (
+
+            cd HM2-Mod_Manager
+            echo "!pathWithFolderName!" > path_to_game_folder.dat
+            echo Set the path to the Game's folder
+            goto :end_set_path
+
+        ) else (
+
+            mkdir HM2-Mod_Manager
+            cd HM2-Mod_Manager
+            echo "!pathWithFolderName!" > path_to_game_folder.dat
+            echo Set the path to the Game's folder
+            goto :end_set_path
+
+        )
+
+    )
+
     @REM Normal mode
     if "%2" == "" (
         
@@ -215,9 +282,9 @@ exit /b
     )
 
 
-    set path=%2
+    set _path=%2
 
-    set noQuotes=%path:"=%
+    set noQuotes=%_path:"=%
     set pathWithFolderName=%noQuotes%
 
     if exist HM2-Mod_Manager (
@@ -259,7 +326,8 @@ exit /b
     if "%answer%" == "" goto :set_path_click
     if "%answer%" == "1" (
 
-        set /p answer2="%NORMAL%Insert the path: %BOLD%"
+        @REM REVIEW-SINGLE_COMMAND: Da guardare una seconda volta se va bene;
+        for /F "delims=" %%A in ('powershell -Command "& {%pwshScriptPath_PWSH% getPathFromWindowsFolderBrowser}"') do set answer2=%%A
 
         set removedQuotes_dir=!answer2:"=!
         dir "!removedQuotes_dir!" >nul 2>nul && call :game_path || (
@@ -273,7 +341,8 @@ exit /b
     )
     if "%answer%" == "2" (
 
-        set /p answer2="%NORMAL%Insert the path: %BOLD%"
+        @REM REVIEW-SINGLE_COMMAND: Da guardare una seconda volta se va bene;
+        for /F "delims=" %%A in ('powershell -Command "& {%pwshScriptPath_PWSH% getPathFromWindowsFolderBrowser}"') do set answer2=%%A
 
         set removedQuotes_dir=!answer2:"=!
         dir "!removedQuotes_dir!" >nul 2>nul && call :backup_path || (
@@ -292,9 +361,9 @@ exit /b
 
     :game_path
 
-        set path=%answer2%
+        set _path=%answer2%
 
-        set noQuotes=%path:"=%
+        set noQuotes=%_path:"=%
         set pathWithFolderName=%noQuotes%
 
         cls
@@ -320,9 +389,9 @@ exit /b
 
     :backup_path
 
-        set path=%answer2%
+        set _path=%answer2%
 
-        set noQuotes=%path:"=%
+        set noQuotes=%_path:"=%
         set pathWithFolderName=%noQuotes%
 
         cls
@@ -475,7 +544,8 @@ exit /b
 
                 dir "%3" >nul 2>nul && (
 
-                    powershell -Command "Expand-Archive -Path %3 -DestinationPath ($env:TEMP + '\!nameOfFolderForExtraction!\')" 2>nul || echo Couldn't extract the zip file & exit /b
+                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                    powershell -Command "& {%pwshScriptPath_PWSH% extractFromArchive %3 !nameOfFolderForExtraction!}" 2>nul || echo Couldn't extract the zip file & exit /b
                     cd /d %temp%\!nameOfFolderForExtraction!
 
                 ) || echo Couldn't find the zip file or the path is incorrect & exit /b
@@ -505,7 +575,11 @@ exit /b
                     ) || echo Couldn't find the rar file or the path is incorrect & exit /b
 
 
-                ) || echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL% & exit /b
+                ) || (
+                    @REM Changed: how it handles it without 7zip or winrar
+                    call :no_unrar-7zip_found "normalExtraction" "%3" "%TEMP%"\!nameOfFolderForExtraction!\
+                    if "%failed%" == "yes" exit /b
+                )
 
             )
 
@@ -514,137 +588,193 @@ exit /b
         @REM Direct download from the terminal
         echo "%2" | find "https://www.dropbox.com" >nul && (
 
-            cd /d %temp%\!nameOfFolderForExtraction!
-            set "link='%2'.Replace('?dl', '?dl=1')"
+            @REM TODO: Need to test these parameters below here and also the functions of powershell;
 
-            @REM Checks the file extension
-            echo Checking the file to download...
-
-            set getContentDisposition="[Net.HttpWebRequest]::Create(!link!).GetResponse().Headers['Content-Disposition']"
-            powershell -Command !getContentDisposition! > %temp%\temp.dat
-
-            set /p contentDisposition=<%temp%\temp.dat
-            set fileName=[Regex]::Match('%contentDisposition%', 'filename="(.*)"').Groups[1].Value -replace '; .*'
-            @REM -------------------------------------------------------------------------------------------------------------------
-
-
-            powershell -Command %fileName% | find ".zip" && (
-
-                echo Downloading...
-                powershell -Command "(New-Object System.Net.WebClient).DownloadFile(!link!, ((Get-Location).path + '.\%fileName%'))" || ( 
-                    echo %RED%URL%NORMAL% could be wrong & exit /b
+            :dropbox-fileDownload_and_Extraction
+                if %1 neq "/i" (
+                    set parameter=%1 
+                ) else (
+                    set parameter=%2
                 )
 
-                echo Extracting...
-                powershell -Command "Expand-Archive -Path .\%fileName% -DestinationPath .\fromURL" || echo Couldn't extract the zip file & exit /b
-                cd fromURL
+                cd /d %temp%\!nameOfFolderForExtraction!
 
-            ) || powershell -Command %fileName% | find ".rar" && (
+                @REM Checks the file extension
+                echo Checking the file to download...
 
-                echo Downloading...
-                powershell -Command "(New-Object System.Net.WebClient).DownloadFile(!link!, ((Get-Location).path + '.\%fileName%'))" || ( 
-                    echo %RED%URL%NORMAL% could be wrong & exit /b
+                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                powershell -Command "& {%pwshScriptPath_PWSH% dropbox_File_check %parameter%}" > %temp%\temp.dat
+                set /p fileName=<%temp%\temp.dat
+                @REM -------------------------------------------------------------------------------------------------------------------
+
+
+                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                set downloadFile=powershell -Command "& {%pwshScriptPath_PWSH% getFileFromURL %parameter% %cd% !fileName!}"
+
+                echo !fileName! | find ".zip" >nul && (
+
+                    echo Downloading...
+                    %downloadFile% || ( 
+                        echo %RED%URL%NORMAL% could be wrong & exit /b
+                    )
+
+                    echo Extracting...
+                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                    powershell -Command "& {%pwshScriptPath_PWSH% extractFile %cd% !fileName!}" || echo Couldn't extract the zip file & exit /b
+                    cd fromURL
+
+                ) || echo !fileName! | find ".rar" >nul && (
+
+                    echo Downloading...
+                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                    %downloadFile% || ( 
+                        echo %RED%URL%NORMAL% could be wrong & exit /b
+                    )
+
+                    echo Extracting...
+                    where unrar >nul 2>nul && (
+
+
+                        dir "!fileName!" >nul 2>nul && (
+
+                            unrar x "!fileName!" "%cd%"\fromURL\ >nul 2>nul || echo Couldn't extract the rar file & exit /b
+
+                        ) || echo Couldn't find the rar file or the path is incorrect & exit /b
+
+
+                    ) || where 7z >nul 2>nul && (
+
+
+                        dir "!fileName!" >nul 2>nul && (
+
+                            7z x "!fileName!" -o"fromURL" >nul 2>nul || echo Couldn't extract the rar file & exit /b
+
+                        ) || echo Couldn't find the rar file or the path is incorrect & exit /b
+
+
+                    ) || (
+                        @REM Changed: how it handles it without 7zip or winrar
+                        call :no_unrar-7zip_found "normalExtraction" "!fileName!" "%cd%"\fromURL\ 
+                        if "%failed%" == "yes" exit /b
+                    )
+
+                    cd fromURL
+
+                ) || (
+
+                    echo Downloading...
+                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                    %downloadFile% || ( 
+                        echo %RED%URL%NORMAL% could be wrong & exit /b
+                    )
+
                 )
-
-                echo Extracting...
-                where unrar >nul 2>nul && (
-
-
-                    dir "%fileName%" >nul 2>nul && (
-
-                        unrar x "%fileName%" "%cd%"\fromURL\ >nul 2>nul || echo Couldn't extract the rar file & exit /b
-
-                    ) || echo Couldn't find the rar file or the path is incorrect & exit /b
-
-
-                ) || where 7z >nul 2>nul && (
-
-
-                    dir "%fileName%" >nul 2>nul && (
-
-                        7z x "%fileName%" -o"fromURL" >nul 2>nul || echo Couldn't extract the rar file & exit /b
-
-                    ) || echo Couldn't find the rar file or the path is incorrect & exit /b
-
-
-                ) || echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL% & exit /b
-
-                cd fromURL
-
-            ) || (
-
-                echo Downloading...
-                powershell -Command "(New-Object System.Net.WebClient).DownloadFile(!link!, ((Get-Location).path + '.\%fileName%'))" || ( 
-                    echo %RED%URL%NORMAL% could be wrong & exit /b
-                )
-
-            )
+            goto :current_directory
 
         )
         
-        @REM Need to figure out ------ ! --------
-        powershell -Command "'%2' -cmatch '(http|https):\/\/'" | find "True" >nul && (
+        @REM REVIEW-SINGLE_COMMAND: powershell command here;
+        powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '%2' '(http|https):\/\/'}" | find "True" >nul && (
 
-            cd /d %temp%\!nameOfFolderForExtraction!
+            @REM TODO: Need to test these parameters below here and 
+            @REM TODO: need to find a way to extract with 7Zip4Powershell;
 
-            :URL_confirmation
-            echo %YELLOW%%2%NORMAL%
-            echo Are you sure that this link is a direct download to a:
-            echo -%RED%Patchwad%NORMAL% file
-            echo -%RED%Wad%NORMAL% file
-            echo -%RED%Zip%NORMAL% file
-            echo -%RED%Rar%NORMAL% file
-            echo.
+            :not_Dropbox-fileDownload_and_Extraction
+                if %1 neq "/i" (
+                    set parameter=%1 
+                ) else (
+                    set parameter=%2
+                )
 
-            set /p answer="(Yes|No): "
+                cd /d %temp%\!nameOfFolderForExtraction!
 
-            powershell -Command "'!answer!' -cmatch 'y|Y'" | find "True" >nul && (
+                :URL_confirmation
+                echo %YELLOW%%parameter%%NORMAL%
+                echo Are you sure that this link is a direct download to a:
+                echo -%RED%Patchwad%NORMAL% file
+                echo -%RED%Wad%NORMAL% file
+                echo -%RED%Zip%NORMAL% file
+                echo -%RED%Rar%NORMAL% file
+                echo.
 
-                powershell -Command "package | findstr '7Zip4Powershell'" >nul && (
+                set /p answer="(Yes|No): "
 
-                    :start_extraction
-                    echo yes
+                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '!answer!' 'y|Y'}" | find "True" >nul && (
+
+                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                    powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'checkAvailability'}" >nul && (
+
+                        :start_extraction
+
+                            @REM TODO: Needed to be tested
+
+                            @REM Downloads the archive
+                            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                            powershell -Command "& {%pwshScriptPath_PWSH% getFileFromURL '%parameter%' '%cd%' 'fileFromURL'}"
+
+                            @REM Extracts the archive
+                            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'checkArchive' '%cd%\fileFromURL'}" > %temp%\temp.dat
+
+
+                            set /p formatOfFile=<%temp%\temp.dat
+                            echo !formatOfFile! | find "Rar" >nul && (
+                                
+                                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                                powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\fileFromURL' '%cd%\fromURL\'}"
+                                cd /d '%cd%\fromURL\'
+                                goto :current_directory
+
+                            ) || echo !formatOfFile! | find "Zip" >nul && (
+
+                                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                                powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\fileFromURL' '%cd%\fromURL\'}"
+                                cd /d '%cd%\fromURL\'
+                                goto :current_directory
+
+                            ) || echo !formatOfFile! | find "Error" >nul && goto :current_directory
+
+                    ) || (
+
+                        echo A powershell module is needed for this type of use of the parameter
+                        echo Do you want to install it?
+
+                        choice
+
+                        if %errorlevel% == 1 (
+
+                            echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
+                            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'install'}"
+
+                            goto :start_extraction
+
+                        ) else exit /b
+
+                    )
+
+                )
+                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '!answer!' 'n|N'}" | find "True" >nul && (
+
+                    echo Exiting then...
                     exit /b
 
                 ) || (
 
-                    echo A powershell module is needed for this type of use of the parameter
-                    echo Do you want to install it?
+                    cls
+                    echo Choose something, please
+                    pause
+                    cls
+                    goto :URL_confirmation
 
-                    choice
+                ) 
 
-                    if %errorlevel% == 1 (
-
-                        echo Installng the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
-                        powershell -Command "Install-Module -Name 7Zip4Powershell -Scope CurrentUser"
-
-                        goto :start_extraction
-
-                    ) else exit /b
-
-                )
-
-                goto :end_of_URL_confirmation
-            
-            )
-            powershell -Command "'!answer!' -cmatch 'n|N'" | find "True" >nul && (
-
-                echo Exiting then...
-                exit /b
-
-            ) || (
-
-                cls
-                echo Choose something, please
-                pause
-                cls
-                goto :URL_confirmation
-
-            ) 
-
-            :end_of_URL_confirmation
-            @REM Needed to work
-            echo end >nul
+                :end_of_URL_confirmation
+                @REM Needed to work
+                echo end >nul
+            goto :current_directory
 
         )
 
@@ -799,143 +929,21 @@ exit /b
 
 
         @REM Direct download from the terminal
+        @REM REVIEW: Look here;
         echo "!removedQuotes_URL!" | find "https://www.dropbox.com" >nul && (
 
-            cd /d %temp%\!nameOfFolderForExtraction!
-            set "link='!removedQuotes_URL!'.Replace('?dl', '?dl=1')"
-
-            @REM Checks the file extension
-            echo Checking the file to download...
-
-            set getContentDisposition="[Net.HttpWebRequest]::Create(!link!).GetResponse().Headers['Content-Disposition']"
-            powershell -Command !getContentDisposition! > %temp%\temp.dat
-
-            set /p contentDisposition=<%temp%\temp.dat
-            set fileName=[Regex]::Match('!contentDisposition!', 'filename="(.*)"').Groups[1].Value -replace '; .*'
-            @REM -------------------------------------------------------------------------------------------------------------------
-
-
-            powershell -Command %fileName% | find ".zip" && (
-
-                echo Downloading...
-                powershell -Command "(New-Object System.Net.WebClient).DownloadFile(!link!, ((Get-Location).path + '.\%fileName%'))" || ( 
-                    echo %RED%URL%NORMAL% could be wrong & exit /b
-                )
-
-                echo Extracting...
-                powershell -Command "Expand-Archive -Path .\%fileName% -DestinationPath .\fromURL" || echo Couldn't extract the zip file & exit /b
-                cd fromURL
-
-            ) || powershell -Command %fileName% | find ".rar" && (
-
-                echo Downloading...
-                powershell -Command "(New-Object System.Net.WebClient).DownloadFile(!link!, ((Get-Location).path + '.\%fileName%'))" || ( 
-                    echo %RED%URL%NORMAL% could be wrong & exit /b
-                )
-
-                echo Extracting...
-                where unrar >nul 2>nul && (
-
-
-                    dir "%fileName%" >nul 2>nul && (
-
-                        unrar x "%fileName%" "%cd%"\fromURL\ >nul 2>nul || echo Couldn't extract the rar file & exit /b
-
-                    ) || echo Couldn't find the rar file or the path is incorrect & exit /b
-
-
-                ) || where 7z >nul 2>nul && (
-
-
-                    dir "%fileName%" >nul 2>nul && (
-
-                        7z x "%fileName%" -o"fromURL" >nul 2>nul || echo Couldn't extract the rar file & exit /b
-
-                    ) || echo Couldn't find the rar file or the path is incorrect & exit /b
-
-
-                ) || echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL% & exit /b
-
-                cd fromURL
-
-            ) || (
-
-                echo Downloading...
-                powershell -Command "(New-Object System.Net.WebClient).DownloadFile(!link!, ((Get-Location).path + '.\%fileName%'))" || ( 
-                    echo %RED%URL%NORMAL% could be wrong & exit /b
-                )
-
-            )
+            call :dropbox-fileDownload_and_Extraction !removedQuotes_URL!
 
         )
         
         @REM Need to figure out ------ ! --------
-        powershell -Command "'!removedQuotes_URL!' -cmatch '(http|https):\/\/'" | find "True" >nul && (
+        @REM REVIEW: Look here;
+        @REM REVIEW-SINGLE_COMMAND: powershell command here;
+        powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '!removedQuotes_URL!' '(http|https):\/\/'}" | find "True" >nul && (
 
-            cd /d %temp%\!nameOfFolderForExtraction!
-
-            :URL_confirmation
-            echo %YELLOW%!removedQuotes_URL!%NORMAL%
-            echo Are you sure that this link is a direct download to a:
-            echo -%RED%Patchwad%NORMAL% file
-            echo -%RED%Wad%NORMAL% file
-            echo -%RED%Zip%NORMAL% file
-            echo -%RED%Rar%NORMAL% file
-            echo.
-
-            set /p answer="(Yes|No): "
-
-            powershell -Command "'!answer!' -cmatch 'y|Y'" | find "True" >nul && (
-
-                powershell -Command "package | findstr '7Zip4Powershell'" >nul && (
-
-                    :start_extraction
-                    echo yes
-                    exit /b
-
-                ) || (
-
-                    echo A powershell module is needed for this type of use of the parameter
-                    echo Do you want to install it?
-
-                    choice
-
-                    if %errorlevel% == 1 (
-
-                        echo Installng the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
-                        powershell -Command "Install-Module -Name 7Zip4Powershell -Scope CurrentUser"
-
-                        goto :start_extraction
-
-                    ) else exit /b
-
-                )
-
-                goto :end_of_URL_confirmation
-            
-            )
-            powershell -Command "'!answer!' -cmatch 'n|N'" | find "True" >nul && (
-
-                echo Exiting then...
-                exit /b
-
-            ) || (
-
-                cls
-                echo Choose something, please
-                pause
-                cls
-                goto :URL_confirmation
-
-            ) 
-
-            :end_of_URL_confirmation
-            @REM Needed to work
-            echo end >nul
+            call :not_Dropbox-fileDownload_and_Extraction !removedQuotes_URL!
 
         )
-
-        goto :current_directory
 
     exit /b
 
@@ -961,9 +969,11 @@ exit /b
 
 
         @REM Extraction of a zip file from the terminal
+        @REM TODO: Need to test the powershell command below here;
         echo "!removedQuotes_archive!" | find ".zip" >nul && (
 
-            powershell -Command "Expand-Archive -Path %3 -DestinationPath ($env:TEMP + '\!nameOfFolderForExtraction!\')" 2>nul || echo Couldn't extract the zip file & exit /b
+            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+            powershell -Command "& {%pwshScriptPath_PWSH% extractFromArchive %3 !nameOfFolderForExtraction!}" 2>nul || echo Couldn't extract the zip file & exit /b
             cd /d %temp%\!nameOfFolderForExtraction!
 
         ) || echo "!removedQuotes_archive!" | find ".rar" >nul && (
@@ -978,7 +988,11 @@ exit /b
                 7z x "!removedQuotes_archive!" -o"%TEMP%"\!nameOfFolderForExtraction!\ >nul 2>nul || echo Couldn't extract the rar file & exit /b
                 cd /d %temp%\!nameOfFolderForExtraction!
 
-            ) || echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL% & exit /b
+            ) || (
+                @REM Changed: how it handles it without 7zip or winrar
+                call :no_unrar-7zip_found "normalExtraction" "!removedQuotes_archive!" "%TEMP%"\!nameOfFolderForExtraction!\
+                if "%failed%" == "yes" exit /b
+            )
 
         )
 
@@ -1090,6 +1104,20 @@ exit /b
 
     )
 
+    if not exist %appdata%%pwshScriptPath_Batch% call :create_powershell_file
+
+    @REM Changed: Added new file for future options
+    if not exist %appdata%\HM2-Mod_Manager\options.ini (
+
+        (
+            echo 
+
+        ) > %appdata%\HM2-Mod_Manager\options.ini
+
+        goto :end
+
+    )
+
 exit /b
 :end
 set quit=yes
@@ -1097,75 +1125,99 @@ exit /b
 
 :set_unrar-7z_path
 
-    @REM 32-bit version of WinRAR
-    for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\WinRAR /v exe32 2^>nul') do (
+    @REM TODO: Need to check if it prevents the start of this code successfully
 
-        echo %%A | find "HKEY" >nul || (
+    set pathToFileChecker=%appdata%\HM2-Mod_Manager\7z-Rar_folderPath_check.dat
 
-            set rawValue=%%A
-            set pathToRAR=!rawValue:    exe32    REG_SZ    =!
+    if not exist %pathToFileChecker% (
 
-            set pathToUnRAR_folder="'!pathToRAR!'.Replace('\WinRAR.exe', '')"
-	        powershell -Command !pathToUnRAR_folder! > %temp%\temp1.dat
-	        set /p pathToUnRAR_pwsh=<%temp%\temp1.dat
+        (
+            echo "false"
 
-
-            set PATH=!PATH!;!pathToUnRAR_pwsh!
-
-        ) 
+        ) > %pathToFileChecker%
 
     )
+    set /p folder_path_checkFile=<%pathToFileChecker%
 
-    @REM 64-bit version of WinRAR
-    for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\WinRAR /v exe64 2^>nul') do (
+    if "!folder_path_checkFile!" == "false" (
 
-        echo %%A | find "HKEY" >nul || (
+        @REM 32-bit version of WinRAR
+        for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\WinRAR /v exe32 2^>nul') do (
 
-            set rawValue=%%A
-            set pathToUnRAR=!rawValue:    exe64    REG_SZ    =!
+            echo %%A | find "HKEY" >nul || (
 
-            set pathToUnRAR_folder="'!pathToRAR!'.Replace('\WinRAR.exe', '')"
-	        powershell -Command !pathToUnRAR_folder! > %temp%\temp1.dat
-	        set /p pathToUnRAR_pwsh=<%temp%\temp1.dat
+                set rawValue=%%A
+                set pathToRAR=!rawValue:    exe32    REG_SZ    =!
 
-            
-            set PATH=!PATH!;!pathToUnRAR_pwsh!
+                set pathToUnRAR_folder="'!pathToRAR!'.Replace('\WinRAR.exe', '')"
+	            powershell -Command !pathToUnRAR_folder! > %temp%\temp1.dat
+	            set /p pathToUnRAR_pwsh=<%temp%\temp1.dat
 
-        ) 
 
-    )
+                set PATH=!PATH!;!pathToUnRAR_pwsh!
 
-    @REM 32-bit version of 7zip
-    for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\7-Zip /v Path 2^>nul') do (
+            ) 
 
-        echo %%A | find "HKEY" >nul || (
+        )
 
-            set rawValue=%%A
-            set pathTo7z_folder=!rawValue:    Path    REG_SZ    =!
-            set finalPathTo7z_folder=!pathTo7z_folder:7-Zip\=7-Zip!
+        @REM 64-bit version of WinRAR
+        for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\WinRAR /v exe64 2^>nul') do (
 
-            
-            set PATH=!PATH!;!finalPathTo7z_folder!
+            echo %%A | find "HKEY" >nul || (
 
-        ) 
+                set rawValue=%%A
+                set pathToUnRAR=!rawValue:    exe64    REG_SZ    =!
 
-    )
+                set pathToUnRAR_folder="'!pathToRAR!'.Replace('\WinRAR.exe', '')"
+	            powershell -Command !pathToUnRAR_folder! > %temp%\temp1.dat
+	            set /p pathToUnRAR_pwsh=<%temp%\temp1.dat
 
-    @REM 64-bit version of 7zip
-    for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\7-Zip /v Path64 2^>nul') do (
 
-        echo %%A | find "HKEY" >nul || (
+                set PATH=!PATH!;!pathToUnRAR_pwsh!
 
-            set rawValue=%%A
-            set pathTo7z_folder=!rawValue:    Path64    REG_SZ    =!
-            set finalPathTo7z_folder=!pathTo7z_folder:7-Zip\=7-Zip!
+            ) 
 
-            
-            set PATH=!PATH!;!finalPathTo7z_folder!
+        )
 
-        ) 
+        @REM 32-bit version of 7zip
+        for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\7-Zip /v Path 2^>nul') do (
 
-    )
+            echo %%A | find "HKEY" >nul || (
+
+                set rawValue=%%A
+                set pathTo7z_folder=!rawValue:    Path    REG_SZ    =!
+                set finalPathTo7z_folder=!pathTo7z_folder:7-Zip\=7-Zip!
+
+
+                set PATH=!PATH!;!finalPathTo7z_folder!
+
+            ) 
+
+        )
+
+        @REM 64-bit version of 7zip
+        for /f "delims=" %%A in ('reg query HKEY_LOCAL_MACHINE\SOFTWARE\7-Zip /v Path64 2^>nul') do (
+
+            echo %%A | find "HKEY" >nul || (
+
+                set rawValue=%%A
+                set pathTo7z_folder=!rawValue:    Path64    REG_SZ    =!
+                set finalPathTo7z_folder=!pathTo7z_folder:7-Zip\=7-Zip!
+
+
+                set PATH=!PATH!;!finalPathTo7z_folder!
+
+            ) 
+
+        )
+
+        @REM Will prevent unnecessary running of code
+        (
+            echo true
+
+        ) > %pathToFileChecker%
+
+    ) else if "!folder_path_checkFile!" == "true" exit /b 0
 
 exit /b
 
@@ -1185,4 +1237,61 @@ exit /b
 
     ) || %pathToFolder%\HotlineMiami2.exe
 
+exit /b
+
+:create_powershell_file
+
+    @REM FIX: Need to change the URL for the powershell file
+    set linkToPwshFile=https://raw.githubusercontent.com/SitesHub/HM2-Mod-Manager-CLI/main/HM2-mod_manager.bat
+    set commandForGettingPwshFile=(New-Object System.Net.WebClient).DownloadFile('%linkToPwshFile%', ($env:appdata + '\HM2-Mod_Manager'  + '\scripts.ps1'))
+
+    powershell -Command "%commandForGettingPwshFile%"
+
+exit /b
+
+:no_unrar-7zip_found
+
+    set nameOfArchive=%2
+    set destination=%3
+
+    if "%1" == "notDropBox" (
+
+        echo A powershell module is needed for this kind of operation
+        echo Do you want to install it?
+
+        choice
+
+        if %errorlevel% == 1 (
+
+            echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
+            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'install'}"
+
+            goto :start_extraction
+
+        ) else exit /b
+
+    ) else if "%1" == "normalExtraction" (
+
+        echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL%
+        echo Do you want to install a powershell module to do that?
+
+        choice
+
+        if %errorlevel% == 1 (
+
+            echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
+            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'install'}"
+            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\%nameOfArchive%' '%destination%'}"
+
+            cd /d %destination%
+
+        ) else goto :quitNormalExtraction
+
+    )   
+
+exit /b
+:quitNormalExtraction
+set failed=yes
 exit /b
