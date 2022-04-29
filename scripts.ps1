@@ -107,7 +107,7 @@ function extractFile {
         [Parameter(Mandatory)] [string]$fileName
     )
 
-    Expand-Archive -Path $pathToFile''$fileName -DestinationPath $pathToFile'\fromURL'
+    Expand-Archive -Path $pathToFile'\'$fileName -DestinationPath $pathToFile'\fromURL'
 
 }
 
@@ -275,7 +275,8 @@ function HM2_Mod_Manager_7Zip4Powershell {
         }
 
         ([string]'extractArchive') {
-            Expand-7Zip -ArchiveFileName $pathToArchive -TargetPath $targetPathForArchive
+            [string]$correctPathToArchive = ($pathToArchive).Replace('"', "\")
+            Expand-7Zip -ArchiveFileName $correctPathToArchive -TargetPath $targetPathForArchive
             break
         }
 

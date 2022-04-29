@@ -321,7 +321,7 @@ exit /b
     if "%answer%" == "" goto :set_path_click
     if "%answer%" == "1" (
 
-        @REM REVIEW-SINGLE_COMMAND: Da guardare una seconda volta se va bene;
+        @REM REVIEW-SINGLE_COMMAND: Need to test this a second time, just in case;
         for /F "delims=" %%A in ('powershell -Command "& {%pwshScriptPath_PWSH% getPathFromWindowsFolderBrowser}"') do set answer2=%%A
 
         set removedQuotes_dir=!answer2:"=!
@@ -336,7 +336,7 @@ exit /b
     )
     if "%answer%" == "2" (
 
-        @REM REVIEW-SINGLE_COMMAND: Da guardare una seconda volta se va bene;
+        @REM REVIEW-SINGLE_COMMAND: Need to test this a second time, just in case;
         for /F "delims=" %%A in ('powershell -Command "& {%pwshScriptPath_PWSH% getPathFromWindowsFolderBrowser}"') do set answer2=%%A
 
         set removedQuotes_dir=!answer2:"=!
@@ -581,13 +581,7 @@ exit /b
         )
 
         @REM Direct download from the terminal
-        echo "%2" | find "https://www.dropbox.com" >nul && (
-
-            @REM TODO: Need to test these parameters below here and also the functions of powershell;
-
-            goto :dropbox-fileDownload_and_Extraction
-
-        )
+        echo "%2" | find "https://www.dropbox.com" >nul && goto :dropbox-fileDownload_and_Extraction
         
         @REM REVIEW-SINGLE_COMMAND: powershell command here;
         powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '%2' '(http|https):\/\/'}" | find "True" >nul && (
@@ -603,69 +597,70 @@ exit /b
 
 
     :current_directory
-    @REM Gets the amount of files needed to be installed 
-    @REM present in the same folder as the batch file and
-    @REM the path to the game's folder
+        @REM Gets the amount of files needed to be installed 
+        @REM present in the same folder as the batch file and
+        @REM the path to the game's folder
 
-    @REM If there are patchwad files inside other folders that are in the current one,
-    @REM it'll get the main folder, closest to the current one and place it inside the mods' folder
-    set count=0
-    set existPatchwadsInsideFolders=false
-    for /R %%A in (*.patchwad) do (
+        @REM If there are patchwad files inside other folders that are in the current one,
+        @REM it'll get the main folder, closest to the current one and place it inside the mods' folder
+        set count=0
+        set existPatchwadsInsideFolders=false
+        for /R %%A in (*.patchwad) do (
 
-        if "%existPatchwadsInsideFolders%" == "false" set existPatchwadsInsideFolders=true
+            if "%existPatchwadsInsideFolders%" == "false" set existPatchwadsInsideFolders=true
 
-        set normalPath=%%A
-	    call set onlyFolder_Name=%%normalPath:!cd!\=%%
-	    for /f "delims=\" %%B in ('echo !onlyFolder_Name!') do set finalPath=%%B
+            set normalPath=%%A
+	        call set onlyFolder_Name=%%normalPath:!cd!\=%%
+	        for /f "delims=\" %%B in ('echo !onlyFolder_Name!') do set finalPath=%%B
 
-        set list[!count!]=!finalPath!
-        set /A count=%count%+1 >nul
-
-    )
-
-
-    @REM Moves folders inside mods if found any
-    if "%existPatchwadsInsideFolders%" == "true" (
-
-        set /A amount=%count%-1
-
-        for /L %%A in (0, 1, !amount!) do (
-
-            move !list[%%A]! "%userprofile%\Documents\My Games\HotlineMiami2\mods" >nul 2>nul
+            set list[!count!]=!finalPath!
+            set /A count=%count%+1 >nul
 
         )
-        echo Moved modded folders inside \mods
-
-    )
-    set /p pathToFolder=<%appdata%\HM2-Mod_Manager\path_to_game_folder.dat
-
-    for /F "delims=" %%A in ('dir ^| find /c ".patchwad"') do set patchwad=%%A
-    for /F "delims=" %%A in ('dir ^| find /c ".wad"') do set wad=%%A
 
 
-    @REM Install the files inside the correct folders
-    @REM only if the amount isn't equal to 0
-    if "%patchwad%" neq "0" (
+        @REM Moves folders inside mods if found any
+        if "%existPatchwadsInsideFolders%" == "true" (
 
-        move *.patchwad "%userprofile%\Documents\My Games\HotlineMiami2\mods" >nul
-        echo Installed patchwad file\s inside \mods
+            set /A amount=%count%-1
 
-    )
-    if "%wad%" neq "0" (
+            for /L %%A in (0, 1, !amount!) do (
+
+                move !list[%%A]! "%userprofile%\Documents\My Games\HotlineMiami2\mods" >nul 2>nul
+
+            )
+            echo Moved modded folders inside \mods
+
+        )
+        set /p pathToFolder=<%appdata%\HM2-Mod_Manager\path_to_game_folder.dat
+
+        for /F "delims=" %%A in ('dir ^| find /c ".patchwad"') do set patchwad=%%A
+        for /F "delims=" %%A in ('dir ^| find /c ".wad"') do set wad=%%A
+
+
+        @REM Install the files inside the correct folders
+        @REM only if the amount isn't equal to 0
+        if "%patchwad%" neq "0" (
+
+            move *.patchwad "%userprofile%\Documents\My Games\HotlineMiami2\mods" >nul
+            echo Installed patchwad file\s inside \mods
+
+        )
+        if "%wad%" neq "0" (
         
-        move *.wad %pathToFolder% >nul
-        echo Installed wad file\s inside the game's folder
+            move *.wad %pathToFolder% >nul
+            echo Installed wad file\s inside the game's folder
 
-    )
+        )
 
-    echo Finished the installation
-    if defined restartGame call :restart_game
+        echo Finished the installation
+        if defined restartGame call :restart_game
 
-    echo %cmdcmdline% | find /i """%~f0""" >nul && (
-        echo.
-        pause
-    )
+        echo %cmdcmdline% | find /i """%~f0""" >nul && (
+            echo.
+            pause
+        )
+    @REM End current_directory
 
 exit /b
 
@@ -1105,19 +1100,21 @@ exit /b
 
 exit /b
 
+@REM Changed: Tested and fixed this part
 :no_unrar-7zip_found
 
     set nameOfArchive=%2
     set destination=%3
 
-    if "%1" == "notDropBox" (
+
+    if %1 == "notDropBox" (
 
         echo A powershell module is needed for this kind of operation
         echo Do you want to install it?
 
         choice
 
-        if %errorlevel% == 1 (
+        if %errorlevel% == 0 (
 
             echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
             @REM REVIEW-SINGLE_COMMAND: powershell command here;
@@ -1127,23 +1124,34 @@ exit /b
 
         ) else exit /b
 
-    ) else if "%1" == "normalExtraction" (
+    ) else if %1 == "normalExtraction" (
 
-        echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL%
-        echo Do you want to install a powershell module to do that?
+        powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'checkAvailability'}" >nul && (
 
-        choice
-
-        if %errorlevel% == 1 (
-
-            echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
-            @REM REVIEW-SINGLE_COMMAND: powershell command here;
-            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'install'}"
+            echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL%
+            echo Using %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL% ...
             powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\%nameOfArchive%' '%destination%'}"
 
-            cd /d %destination%
+        ) || (
 
-        ) else goto :quitNormalExtraction
+            echo Couldn't find neither %RED%unRAR.exe%NORMAL% or %RED%7z.exe%NORMAL%
+            echo Do you want to install a powershell module to do that?
+
+            choice
+
+            if %errorlevel% == 0 (
+
+                echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
+                @REM REVIEW-SINGLE_COMMAND: powershell command here;
+                powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'install'}"
+                echo Extracting...
+                powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\%nameOfArchive%' '%destination%'}"
+
+                cd /d %destination%
+
+            ) else goto :quitNormalExtraction
+
+        )    
 
     )   
 
@@ -1153,10 +1161,11 @@ set failed=yes
 exit /b
 
 @REM TODO: Need to move this function in a better place
+@REM Changed: Done testing this part
 :dropbox-fileDownload_and_Extraction
                 
     if "%1" neq "/i" (
-        set parameter=%1 
+        set parameter='%1'
     ) else (
         set parameter=%2
     )
@@ -1166,14 +1175,12 @@ exit /b
     @REM Checks the file extension
     echo Checking the file to download...
 
-    @REM REVIEW-SINGLE_COMMAND: powershell command here;
-    powershell -Command "& {%pwshScriptPath_PWSH% dropbox_File_check %parameter%}" > %temp%\temp.dat
+    powershell -Command "& {%pwshScriptPath_PWSH% dropbox_File_check '%parameter%'}" > %temp%\temp.dat
     set /p fileName=<%temp%\temp.dat
     @REM -------------------------------------------------------------------------------------------------------------------
 
 
-    @REM REVIEW-SINGLE_COMMAND: powershell command here;
-    set downloadFile=powershell -Command "& {%pwshScriptPath_PWSH% getFileFromURL %parameter% %cd% !fileName!}"
+    set downloadFile=powershell -Command "& {%pwshScriptPath_PWSH% getFileFromURL '%parameter%' '%cd%\' '!fileName!'}"
 
     echo !fileName! | find ".zip" >nul && (
 
@@ -1183,14 +1190,11 @@ exit /b
         )
 
         echo Extracting...
-        @REM REVIEW-SINGLE_COMMAND: powershell command here;
-        powershell -Command "& {%pwshScriptPath_PWSH% extractFile %cd% !fileName!}" || echo Couldn't extract the zip file & exit /b
-        cd fromURL
+        powershell -Command "& {%pwshScriptPath_PWSH% extractFile '%cd%' '!fileName!'}" || ( echo Couldn't extract the zip file & exit /b )
 
     ) || echo !fileName! | find ".rar" >nul && (
 
         echo Downloading...
-        @REM REVIEW-SINGLE_COMMAND: powershell command here;
         !downloadFile! || ( 
             echo %RED%URL%NORMAL% could be wrong & exit /b
         )
@@ -1201,38 +1205,36 @@ exit /b
 
             dir "!fileName!" >nul 2>nul && (
 
-                unrar x "!fileName!" "%cd%"\fromURL\ >nul 2>nul || echo Couldn't extract the rar file & exit /b
+                unrar x "!fileName!" "%cd%"\fromURL\ >nul 2>nul || ( echo Couldn't extract the rar file & exit /b )
 
-            ) || echo Couldn't find the rar file or the path is incorrect & exit /b
-
+            ) || ( echo Couldn't find the rar file or the path is incorrect & exit /b )
 
         ) || where 7z >nul 2>nul && (
 
 
             dir "!fileName!" >nul 2>nul && (
 
-                7z x "!fileName!" -o"fromURL" >nul 2>nul || echo Couldn't extract the rar file & exit /b
+                7z x "!fileName!" -o"fromURL" >nul 2>nul || ( echo Couldn't extract the rar file & exit /b )
 
-            ) || echo Couldn't find the rar file or the path is incorrect & exit /b
+            ) || ( echo Couldn't find the rar file or the path is incorrect & exit /b )
 
 
         ) || (
             @REM Changed: how it handles it without 7zip or winrar
             call :no_unrar-7zip_found "normalExtraction" "!fileName!" "%cd%"\fromURL\ 
-            if "%failed%" == "yes" exit /b
+            if "!failed!" == "yes" exit /b
         )
-
-        cd fromURL
 
     ) || (
 
         echo Downloading...
-        @REM REVIEW-SINGLE_COMMAND: powershell command here;
         !downloadFile! || ( 
             echo %RED%URL%NORMAL% could be wrong & exit /b
         )
 
     )
+
+    cd fromURL
 
 goto :current_directory
 
@@ -1240,7 +1242,7 @@ goto :current_directory
 :not_Dropbox-fileDownload_and_Extraction
 
     if "%1" neq "/i" (
-        set parameter=%1 
+        set parameter='%1' 
     ) else (
         set parameter=%2
     )
@@ -1258,81 +1260,66 @@ goto :current_directory
 
     set /p answer="(Yes|No): "
 
-    @REM REVIEW-SINGLE_COMMAND: powershell command here;
     powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '!answer!' 'y|Y'}" | find "True" >nul && (
 
         @REM REVIEW-SINGLE_COMMAND: powershell command here;
         powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'checkAvailability'}" >nul && (
 
-            :start_extraction
+            goto :start_extraction
 
-                @REM FIX: Need to move this label somewhere else than this block
-
-                    @REM Downloads the archive
-                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
-                    powershell -Command "& {%pwshScriptPath_PWSH% getFileFromURL '%parameter%' '%cd%' 'fileFromURL'}"
-
-                    @REM Extracts the archive
-                    @REM REVIEW-SINGLE_COMMAND: powershell command here;
-                    powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'checkArchive' '%cd%\fileFromURL'}" > %temp%\temp.dat
-
-
-                    set /p formatOfFile=<%temp%\temp.dat
-                    echo !formatOfFile! | find "Rar" >nul && (
-                                
-                        @REM REVIEW-SINGLE_COMMAND: powershell command here;
-                        powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\fileFromURL' '%cd%\fromURL\'}"
-                        cd /d '%cd%\fromURL\'
-                        goto :current_directory
-
-                    ) || echo !formatOfFile! | find "Zip" >nul && (
-
-                        @REM REVIEW-SINGLE_COMMAND: powershell command here;
-                        powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\fileFromURL' '%cd%\fromURL\'}"
-                        cd /d '%cd%\fromURL\'
-                        goto :current_directory
-
-                    ) || echo !formatOfFile! | find "Error" >nul && goto :current_directory
-
-        ) || (
-
-            echo A powershell module is needed for this type of use of the parameter
-            echo Do you want to install it?
-
-            choice
-
-            if %errorlevel% == 1 (
-
-                echo Installing the module %UNDERLINE%%BOLD%7Zip4Powershell%NORMAL%
-                @REM REVIEW-SINGLE_COMMAND: powershell command here;
-                powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'install'}"
-
-                goto :start_extraction
-
-            ) else exit /b
-
-        )
+        ) || call :no_unrar-7zip_found "notDropBox" 
 
     )
 
+    powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '!answer!' 'n|N'}" | find "True" >nul && (
+
+        echo Exiting then...
+        exit /b
+
+    ) || (
+
+        cls
+        echo Choose something, please
+        pause
+        cls
+        goto :URL_confirmation
+
+    ) 
+
+
+    @REM TODO: Need to test this part
+    :start_extraction
+
+        @REM Downloads the archive
         @REM REVIEW-SINGLE_COMMAND: powershell command here;
-        powershell -Command "& {%pwshScriptPath_PWSH% regexMatch '!answer!' 'n|N'}" | find "True" >nul && (
+        powershell -Command "& {%pwshScriptPath_PWSH% getFileFromURL '%parameter%' '%cd%' 'fileFromURL'}"
 
-            echo Exiting then...
-            exit /b
+        @REM Extracts the archive
+        @REM REVIEW-SINGLE_COMMAND: powershell command here;
+        powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'checkArchive' '%cd%\fileFromURL'}" > %temp%\temp.dat
 
-        ) || (
 
-            cls
-            echo Choose something, please
-            pause
-            cls
-            goto :URL_confirmation
+        set /p formatOfFile=<%temp%\temp.dat
+        echo !formatOfFile! | find "Rar" >nul && (
+                                
+            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\fileFromURL' '%cd%\fromURL\'}"
+            cd /d '%cd%\fromURL\'
+            goto :current_directory
 
-        ) 
+        ) || echo !formatOfFile! | find "Zip" >nul && (
 
-            :end_of_URL_confirmation
-            @REM Needed to work
-            echo end >nul
+            @REM REVIEW-SINGLE_COMMAND: powershell command here;
+            powershell -Command "& {%pwshScriptPath_PWSH% HM2_Mod_Manager_7Zip4Powershell 'extractArchive' '%cd%\fileFromURL' '%cd%\fromURL\'}"
+            cd /d '%cd%\fromURL\'
+            goto :current_directory
+
+        ) || echo !formatOfFile! | find "Error" >nul && goto :current_directory
+
+    goto :current_directory
+
+    :end_of_URL_confirmation
+    @REM Needed to work
+    echo end >nul
 
 goto :current_directory
