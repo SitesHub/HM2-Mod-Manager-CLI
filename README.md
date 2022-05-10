@@ -3,23 +3,27 @@
 
 # Hotline Miami 2 Mod Manager CLI
 
-This is a Mod Manager designed to install, uninstall mods for Hotline miami 2 without the hastle of going back and forth with folders
+This is a Mod Manager designed to install, uninstall mods for Hotline miami 2 without the hastle of going back and forth with folders.
 
 ## How it works
 
-Basically when you want to play a new level/campaign, you'll only need to put the .patchwad's and .wad's files in the same folder that the batch file is in and it'll do the work for you
+Basically when you want to play a new level/campaign, you'll only need to put the .patchwad's and .wad's files in the same folder that the batch file is in and it'll do the work for you.
 
 ## How to set it up properly
 
 You'll need 2 paths:
-1. The path that leads to the _**game's main folder**_
-2. The path where you have stored the _**music file**_ ( .wad )
+1. The path that leads to the _**game's main folder**_ ;
+2. The path where you have stored the _**music file**_ ( .wad ) ;
 
 To set them, just use the following parameters: 
 ```
 /s        for the first
 /s /b     for the second
 ```
+
+Or you could set them by using the built-in "**GUI**", just click the .bat file like any executable.
+
+![The GUI](GUI.jpg)
 
 ## Paramaters available:
 ```
