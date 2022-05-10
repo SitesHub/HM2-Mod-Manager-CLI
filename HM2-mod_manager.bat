@@ -1233,7 +1233,7 @@ goto :current_directory
 
     :URL_confirmation
     echo %YELLOW%%parameter%%NORMAL%
-    echo Are you sure that this link is a direct download to a:
+    echo Are You sure that this link is a direct download to a:
     echo -%RED%Patchwad%NORMAL% file
     echo -%RED%Wad%NORMAL% file
     echo -%RED%Zip%NORMAL% file
