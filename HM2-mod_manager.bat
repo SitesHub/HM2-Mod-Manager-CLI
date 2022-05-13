@@ -81,6 +81,10 @@ exit /b
 
 :help_click
 
+    @REM In case they exist
+    if defined answer set "answer="
+    if defined restartGame set "restartGame="
+
     cls
     echo %BOLD%Manager of mods for HM2%NORMAL% 
     echo.
@@ -100,12 +104,12 @@ exit /b
     set /p answer="Choose an option: %BOLD%"
 
     if "%answer%" == "" goto :help_click
-    if %answer% == 1 call :install_click
-    if %answer% == 2 cls & call :uninstall
-    if %answer% == 3 cls & call :reset
-    if %answer% == 4 call :set_path_click
-    if %answer% == 5 call :settings_click
-    if %answer% == q exit /b
+    if "%answer%" == "1" call :install_click && goto :help_click
+    if "%answer%" == "2" cls & call :uninstall && goto :help_click
+    if "%answer%" == "3" cls & call :reset && goto :help_click
+    if "%answer%" == "4" call :set_path_click && goto :help_click
+    if "%answer%" == "5" call :settings_click && goto :help_click
+    if "%answer%" == "q" exit /b 1
     goto :help_click
 
 exit /b
@@ -116,15 +120,8 @@ exit /b
     call :checks
     if "%quit%" == "yes" exit /b 1
 
+    call :close_game
 
-    @REM Prevents a permanent freeze of the screen or breaking of the game
-    tasklist | find "HotlineMiami2.exe" >nul && (
-
-        set restartGame=true
-        timeout /NOBREAK /T 5
-        taskkill /IM "HotlineMiami2.exe"
-
-    )
 
     @REM Gets the paths and then it goes to the mods folder, resetting it
     @REM Same with the music
@@ -347,7 +344,7 @@ exit /b
         )
 
     )
-    if "%answer%" == "q" exit /b
+    if "%answer%" == "q" exit /b 1
     if "%answer%" == "b" goto :help_click
     goto :set_path_click
 
@@ -456,7 +453,7 @@ exit /b
     if "%answer%" == "" goto :settings_click
     if "%answer%" == "1" call :show_paths
     if "%answer%" == "2" call :open_explorer
-    if "%answer%" == "q" exit /b
+    if "%answer%" == "q" exit /b 1
     if "%answer%" == "b" goto :help_click
     goto :settings_click
 
@@ -495,15 +492,8 @@ exit /b
     call :checks
     if "%quit%" == "yes" exit /b 1
 
+    call :close_game
 
-    @REM Prevents a permanent freeze of the screen or breaking of the game
-    tasklist | find "HotlineMiami2.exe" >nul && (
-
-        set restartGame=true
-        timeout /NOBREAK /T 5
-        taskkill /IM "HotlineMiami2.exe"
-
-    )
 
     @REM Options for the parameter
     if "%2" neq "" (
@@ -658,15 +648,6 @@ exit /b
     if "%quit%" == "yes" exit /b 1
 
 
-    @REM Prevents a permanent freeze of the screen or breaking of the game
-    tasklist | find "HotlineMiami2.exe" >nul && (
-
-        set restartGame=true
-        timeout /NOBREAK /T 5
-        taskkill /IM "HotlineMiami2.exe"
-
-    )
-
     cls
     echo %BOLD%1%NORMAL%. Installs from %BOLD%current directory%NORMAL%
     echo.
@@ -688,7 +669,7 @@ exit /b
 
         set /p answer2="%NORMAL%Insert the path or [b|q]: %BOLD%"
 
-        if "!answer2!" == "q" exit /b
+        if "!answer2!" == "q" exit /b 1
         if "!answer2!" == "b" goto :install_click
 
         set removedQuotes_archive=!answer2:"=!
@@ -705,19 +686,21 @@ exit /b
 
         set /p answer2="%NORMAL%Insert the URL or [b|q]: %BOLD%"
 
-        if "!answer2!" == "q" exit /b
+        if "!answer2!" == "q" exit /b 1
         if "!answer2!" == "b" goto :install_click
 
         set removedQuotes_URL=!answer2:"=!
         goto :install_click_installation_URL
 
     )
-    if "%answer%" == "q" exit /b
+    if "%answer%" == "q" exit /b 1
     if "%answer%" == "b" goto :help_click
     goto :install_click
 
 
     :install_click_installation_URL
+
+        call :close_game
 
         @REM Looks for the installation path of either WinRAR or 7zip
         @REM and sets it for the script inside the PATH variable
@@ -750,6 +733,8 @@ exit /b
     exit /b
 
     :install_click_installation_archive
+
+        call :close_game
 
         @REM Looks for the installation path of either WinRAR or 7zip
         @REM and sets it for the script inside the PATH variable
@@ -807,15 +792,8 @@ exit /b
     call :checks
     if "%quit%" == "yes" exit /b 1
 
+    call :close_game
 
-    @REM Prevents a permanent freeze of the screen or breaking of the game
-    tasklist | find "HotlineMiami2.exe" >nul && (
-
-        set restartGame=true
-        timeout /NOBREAK /T 5
-        taskkill /IM "HotlineMiami2.exe"
-
-    )
 
     set originalPath=%cd%
 
@@ -1055,23 +1033,42 @@ exit /b
 
 exit /b
 
+
+:close_game
+
+    @REM Prevents a permanent freeze of the screen or breaking of the game
+    tasklist | find "HotlineMiami2.exe" >nul && (
+
+        set restartGame=true
+        taskkill /F /IM "HotlineMiami2.exe"
+        echo Closed the game for installation ^(it'll restart after finished^)
+
+    )
+
+exit /b
+
 :restart_game
 
+    @REM TODO: Need to sync with the cloud for steam;
     @REM Runs the game through Steam if it finds Steam and 
     @REM if inside the game's folder it finds the dll file of the Steam's API
     @REM otherwise it runs it like normal
     reg query HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam /v InstallPath >nul 2>nul && (
 
-        dir %pathToFolder%\steam_api.dll >nul 2>nul && (
+        dir %pathToFolder:" ="%"\steam_api.dll" >nul 2>nul && (
 
             start steam://rungameid/274170
+            echo Restarted the game
             exit /b
 
         )
 
-    ) || %pathToFolder%\HotlineMiami2.exe
+    ) || %pathToFolder:" ="%"\HotlineMiami2.exe"
+
+    echo Restarted the game
 
 exit /b
+
 
 :create_powershell_file
 
