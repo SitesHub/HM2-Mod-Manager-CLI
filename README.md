@@ -1,6 +1,3 @@
-
-<h2><p style="color: yellow">🛑 WORK IN PROGRESS 🛑</p></h2>
-
 # Hotline Miami 2 Mod Manager CLI
 
 This is a Mod Manager designed to install, uninstall mods for Hotline miami 2 without the hastle of going back and forth with folders.
@@ -12,6 +9,7 @@ Basically when you want to play a new level/campaign, you'll only need to put th
 ## How to set it up properly
 
 You'll need 2 paths:
+
 1. The path that leads to the _**game's main folder**_ ;
 2. The path where you have stored the _**music file**_ ( .wad ) ;
 
