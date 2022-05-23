@@ -10,6 +10,23 @@ for /f "tokens=4" %%A in ('ver') do (
 
 )
 
+@REM Creates the ini file if it doesn't exists with the default options
+set pathToINIFile=%appdata%\HM2-Mod_Manager\options.ini
+
+if not exist %pathToINIFile% (
+
+    (
+
+        echo // Insert "true" to enable it or "false" to disable it
+        echo coloredText="true"
+
+    ) > %pathToINIFile%
+
+)
+
+@REM Sets all option variables (skips the comments that starts with //)
+for /f %%A in (%pathToINIFile%) do if %%A neq // set %%A
+
 @REM Sets the variables for colours and formatting
 @REM only useful for an OS like windows 10 or above
 for /F %%A in ('echo prompt $E^| CMD') do set "ESC=%%A"
@@ -19,9 +36,10 @@ set BOLD=%ESC%[1m
 set UNDERLINE=%ESC%[4m
 
 set YELLOW=%ESC%[33m
-set RED=%ESC%[31m
+set RED=%ESC%[31mcls
 
 @REM Removes the colours in case that the version of windows is not 10
+@REM or the option variable is set to false
 if %version% lss 10 (
 
     set NORMAL=%ESC%
@@ -30,6 +48,17 @@ if %version% lss 10 (
 
     set YELLOW=%ESC%
     set RED=%ESC%
+
+)
+
+if %coloredText% == "false" (
+
+    set "NORMAL="
+    set "BOLD="
+    set "UNDERLINE="
+
+    set "YELLOW="
+    set "RED="
 
 )
 
@@ -83,7 +112,6 @@ exit /b
 
     @REM In case they exist
     if defined answer set "answer="
-    if defined restartGame set "restartGame="
 
     cls
     echo %BOLD%Manager of mods for HM2%NORMAL% 
@@ -604,7 +632,7 @@ exit /b
 
             for /L %%A in (0, 1, !amount!) do (
 
-                move !list[%%A]! "%userprofile%\Documents\My Games\HotlineMiami2\mods" >nul 2>nul
+                move "!list[%%A]!" "%userprofile%\Documents\My Games\HotlineMiami2\mods" >nul 2>nul
 
             )
             echo Moved modded folders inside \mods
@@ -884,17 +912,6 @@ exit /b
 
     if not exist %appdata%%pwshScriptPath_Batch% call :create_powershell_file
 
-    if not exist %appdata%\HM2-Mod_Manager\options.ini (
-
-        (
-            echo 
-
-        ) > %appdata%\HM2-Mod_Manager\options.ini
-
-        goto :end
-
-    )
-
 exit /b
 :end
 set quit=yes
@@ -1065,6 +1082,7 @@ exit /b
 
     ) || %pathToFolder:" ="%"\HotlineMiami2.exe"
 
+    if defined restartGame set "restartGame="
     echo Restarted the game
 
 exit /b
@@ -1138,7 +1156,7 @@ exit /b
 set failed=yes
 exit /b
 
-@REM TODO: Need to move this function in a better place
+@REM TODO: Need to move this function in a better place maybe
 @REM Changed: Done testing this part
 :dropbox-fileDownload_and_Extraction
                 
@@ -1216,7 +1234,7 @@ exit /b
 
 goto :current_directory
 
-@REM TODO: Need to move this function in a better place
+@REM TODO: Need to move this function in a better place maybe
 @REM Changed: Done testing this part
 :not_Dropbox-fileDownload_and_Extraction
 
